@@ -32,6 +32,7 @@ export default function Home() {
   if (status === "authenticated") {
     return (
       <div className="min-h-screen w-full bg-[#13274D] text-white flex flex-col items-center gap-20">
+        <div>this is the home page</div>
         <Toaster />
       </div>
     );
