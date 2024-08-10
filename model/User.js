@@ -21,12 +21,13 @@ const UserSchema = new mongoose.Schema(
     },
     name: {
       type: String,
+
       required: false,
       unique: false,
     },
     paid: {
       type: Boolean,
-      default: False,
+      default: false,
     },
     accounts: {
       type: [AccountSchema],

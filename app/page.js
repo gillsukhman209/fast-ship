@@ -4,9 +4,12 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import Loading from "./comps/Loading";
 import toast, { Toaster } from "react-hot-toast";
+import UploadFile from "./comps/UploadFile.jsx";
+import TradesTable from "./comps/TradesTable";
 
 export default function Home() {
   const { data: session, status } = useSession();
+  const [trades, setTrades] = useState([]);
 
   useEffect(() => {
     if (status === "unauthenticated") {
@@ -36,38 +39,15 @@ export default function Home() {
     }
   };
 
-  const [file, setFile] = useState(null);
-
-  const handleFileChange = (e) => {
-    setFile(e.target.files[0]);
-  };
-
-  const handleSubmit = async (e) => {
-    e.preventDefault();
-    if (!file) return;
-
-    const formData = new FormData();
-    formData.append("file", file);
-
-    const response = await fetch("/api/upload", {
-      method: "POST",
-      body: formData,
-    });
-
-    const data = await response.json();
-    onFileUpload(data);
-  };
-
   if (status === "authenticated") {
     return (
       <div className="min-h-screen w-full  text-black flex flex-col items-center gap-20">
-        <div
-          className="text-2xl text-black bg-red-500 p-2 rounded-md"
-          onClick={() => signOut()}
-        >
-          Logout
+        <div>
+          <h1>Trading Journal</h1>
+          <UploadFile onFileUpload={setTrades} />
+          <TradesTable trades={trades} />
         </div>
-        <div className="">Welcome {session?.user?.email} </div>
+
         <Toaster />
       </div>
     );
