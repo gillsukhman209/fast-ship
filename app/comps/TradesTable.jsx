@@ -1,4 +1,3 @@
-// components/TradesTable.js
 import React from "react";
 
 export default function TradesTable({ trades }) {
@@ -17,17 +16,44 @@ export default function TradesTable({ trades }) {
     "Profit/Loss",
   ];
 
-  const calculateProfitLoss = (trade) => {
-    const isBuy = trade.Type === "BUY";
-    const quantity = parseFloat(trade["Filled Qty"]);
-    const price = parseFloat(trade["Avg Fill Price"]);
-    const referencePriceField = isBuy ? "Current Price" : "Avg Fill Price";
-    const referencePrice = parseFloat(trade[referencePriceField] || price);
-    const profitLoss = isBuy
-      ? (referencePrice - price) * quantity
-      : (price - referencePrice) * quantity;
+  // Helper function to pair trades
+  const pairTrades = (trades) => {
+    const pairedTrades = [];
+    const buyTrades = [];
+
+    trades.forEach((trade) => {
+      if (trade["B/S"] == null) {
+        return;
+      }
+      if (trade["B/S"].trim() === "Buy") {
+        buyTrades.push(trade);
+      } else if (trade["B/S"].trim() === "Sell" && buyTrades.length > 0) {
+        const buyTrade = buyTrades.shift(); // Get the oldest unmatched buy trade
+        pairedTrades.push({
+          buyTrade,
+          sellTrade: trade,
+        });
+      }
+    });
+
+    return pairedTrades;
+  };
+
+  // Calculate profit/loss for paired trades
+  const calculateProfitLoss = (buyTrade, sellTrade) => {
+    const buyPrice = parseFloat(buyTrade["Avg Fill Price"]);
+    const sellPrice = parseFloat(sellTrade["Avg Fill Price"]);
+    const quantity = parseFloat(buyTrade["Filled Qty"]);
+
+    if (isNaN(buyPrice) || isNaN(sellPrice) || isNaN(quantity)) {
+      return "Invalid data";
+    }
+
+    const profitLoss = (sellPrice - buyPrice) * quantity;
     return profitLoss.toFixed(2);
   };
+
+  const pairedTrades = pairTrades(trades);
 
   return (
     <div className="container mx-auto px-4">
@@ -44,21 +70,28 @@ export default function TradesTable({ trades }) {
             </tr>
           </thead>
           <tbody>
-            {trades.map((trade, index) => (
+            {pairedTrades.map((pair, index) => (
               <tr
                 key={index}
                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
-                {columns.map((column) => (
-                  <td
-                    key={column}
-                    className="px-4 py-2 border-t border-gray-300"
-                  >
-                    {column === "Profit/Loss"
-                      ? calculateProfitLoss(trade)
-                      : trade[column]}
-                  </td>
-                ))}
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {pair.buyTrade.Timestamp} - {pair.sellTrade.Timestamp}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">Buy/Sell</td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {pair.buyTrade.Type}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {pair.buyTrade["Filled Qty"]}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {pair.buyTrade["Avg Fill Price"]} /{" "}
+                  {pair.sellTrade["Avg Fill Price"]}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {calculateProfitLoss(pair.buyTrade, pair.sellTrade)}
+                </td>
               </tr>
             ))}
           </tbody>
