@@ -1,9 +1,12 @@
-import connectDB from "../../../../lib/connectDB";
-import User from "../../../../model/User";
+import connectDB from "../../../../../lib/connectDB";
+import User from "../../../../../model/User";
 import { NextResponse } from "next/server";
 export async function POST(req, res) {
+  console.log("inside create user");
   try {
-    const { email, name } = await req.json();
+    const { email } = await req.json();
+
+    console.log(email);
 
     await connectDB();
 
@@ -12,7 +15,7 @@ export async function POST(req, res) {
     if (existingUser) {
       return NextResponse.json({ message: "User already exists" });
     }
-    await saveUserToDB(email, name);
+    await saveUserToDB(email);
 
     return NextResponse.json(
       { message: "User created successfully" },
@@ -30,7 +33,6 @@ export async function POST(req, res) {
 const saveUserToDB = async (email, name) => {
   const person = new User({
     email: email,
-    name: name,
   });
   await person.save();
 };
