@@ -14,6 +14,7 @@ export default function TradesTable({ trades }) {
     "Filled Qty",
     "Avg Fill Price",
     "Profit/Loss",
+    "Product",
   ];
 
   // Helper function to pair trades
@@ -48,8 +49,18 @@ export default function TradesTable({ trades }) {
     if (isNaN(buyPrice) || isNaN(sellPrice) || isNaN(quantity)) {
       return "Invalid data";
     }
+    let profitLoss = 0;
 
-    const profitLoss = (sellPrice - buyPrice) * quantity;
+    if (buyTrade["Product"] === sellTrade["Product"]) {
+      if (buyTrade["Product"] === "MNQ") {
+        const points = sellPrice - buyPrice;
+        profitLoss = (points / 50) * quantity * 100;
+      } else if (buyTrade["Product"] === "NQ") {
+        const points = sellPrice - buyPrice;
+        profitLoss = (points / 5) * quantity * 100;
+      }
+    }
+
     return profitLoss.toFixed(2);
   };
 
@@ -91,6 +102,9 @@ export default function TradesTable({ trades }) {
                 </td>
                 <td className="px-4 py-2 border-t border-gray-300">
                   {calculateProfitLoss(pair.buyTrade, pair.sellTrade)}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {pair.buyTrade.Product}
                 </td>
               </tr>
             ))}

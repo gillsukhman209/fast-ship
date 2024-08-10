@@ -42,8 +42,7 @@ export default function Home() {
   if (status === "authenticated") {
     return (
       <div className="min-h-screen w-full  text-black flex flex-col items-center gap-20">
-        <div>
-          <h1>Trading Journal</h1>
+        <div className="flex flex-col items-center gap-20 mt-20">
           <UploadFile onFileUpload={setTrades} />
           <TradesTable trades={trades} />
         </div>
