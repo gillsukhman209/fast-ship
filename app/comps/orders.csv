@@ -1,3 +1,0 @@
-orderId,Account,Order ID,B/S,Contract,Product,Product Description,avgPrice,filledQty,Fill Time,lastCommandId,Status,_priceFormat,_priceFormatType,_tickSize,spreadDefinitionId,Version ID,Timestamp,Date,Quantity,Text,Type,Limit Price,Stop Price,decimalLimit,decimalStop,Filled Qty,Avg Fill Price,decimalFillAvg
-103358941881,MFFUSF112917021,103358941881, Buy,MNQU4,MNQ,Micro E-mini NASDAQ-100,18467.25,3,08/09/2024 07:07:29,103358941881, Filled,-2,0,0.25,,103358941881,08/09/2024 07:07:29,8/9/24,3,Chart, Market,,,,,3,18467.25,18467.25
-103358941893,MFFUSF112917021,103358941893, Sell,MNQU4,MNQ,Micro E-mini NASDAQ-100,18530.25,3,08/09/2024 07:12:09,103358941893, Filled,-2,0,0.25,,103358941893,08/09/2024 07:08:20,8/9/24,3,Chart, Limit,18530.25,,18530.25,,3,18530.25,18530.25
