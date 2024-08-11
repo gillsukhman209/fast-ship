@@ -8,7 +8,7 @@ export default function Home() {
   return (
     <div className="min-h-screen w-full  text-black flex flex-col items-center gap-20">
       <div className="flex flex-col items-center gap-20 mt-20">
-        <div>Hello</div>
+        <div>Hellos</div>
       </div>
 
       <Toaster />
