@@ -7,8 +7,18 @@ export default function TradesTable({ trades }) {
     );
   }
 
+  // Function to sort trades by fill time (Timestamp)
+  const sortTradesByTime = (trades) => {
+    return trades
+      .slice()
+      .sort((a, b) => new Date(a.Timestamp) - new Date(b.Timestamp));
+  };
+
+  // Sort trades
+  const sortedTrades = sortTradesByTime(trades);
+
   const columns = [
-    "Timestamp",
+    "Time",
     "B/S",
     "Type",
     "Filled Qty",
@@ -17,25 +27,64 @@ export default function TradesTable({ trades }) {
     "Product",
   ];
 
-  // Helper function to pair trades
-  const pairTrades = (trades) => {
+  const pairTrades = (sortedTrades) => {
     const pairedTrades = [];
-    const buyTrades = [];
+    let currentBuyTrade = null;
 
-    trades.forEach((trade) => {
+    sortedTrades.forEach((trade) => {
       if (trade["B/S"] == null) {
         return;
       }
       if (trade["B/S"].trim() === "Buy") {
-        buyTrades.push(trade);
-      } else if (trade["B/S"].trim() === "Sell" && buyTrades.length > 0) {
-        const buyTrade = buyTrades.shift(); // Get the oldest unmatched buy trade
+        if (currentBuyTrade) {
+          // If there's already a buy trade, add the quantities
+          currentBuyTrade["Filled Qty"] =
+            parseFloat(currentBuyTrade["Filled Qty"]) +
+            parseFloat(trade["Filled Qty"]);
+          // Recalculate average fill price
+          currentBuyTrade["Avg Fill Price"] =
+            (parseFloat(currentBuyTrade["Avg Fill Price"]) *
+              parseFloat(currentBuyTrade["Filled Qty"]) +
+              parseFloat(trade["Avg Fill Price"]) *
+                parseFloat(trade["Filled Qty"])) /
+            (parseFloat(currentBuyTrade["Filled Qty"]) +
+              parseFloat(trade["Filled Qty"]));
+        } else {
+          // If it's the first buy trade, set it as the current buy trade
+          currentBuyTrade = { ...trade };
+        }
+      } else if (trade["B/S"].trim() === "Sell" && currentBuyTrade) {
+        // When we encounter a sell trade, pair it with the current buy trade
         pairedTrades.push({
-          buyTrade,
+          buyTrade: currentBuyTrade,
           sellTrade: trade,
         });
+        currentBuyTrade = null; // Reset the current buy trade
       }
     });
+
+    // Handle any remaining buy trades
+    // buyTrades.forEach((buyTrade) => {
+    //   pairedTrades.push({
+    //     buyTrade,
+    //     sellTrade: null,
+    //   });
+    // });
+
+    // sortedTrades.forEach((trade) => {
+    //   if (trade["B/S"] == null) {
+    //     return;
+    //   }
+    //   if (trade["B/S"].trim() === "Buy") {
+    //     buyTrades.push(trade);
+    //   } else if (trade["B/S"].trim() === "Sell" && buyTrades.length > 0) {
+    //     const buyTrade = buyTrades.shift(); // Get the oldest unmatched buy trade
+    //     pairedTrades.push({
+    //       buyTrade,
+    //       sellTrade: trade,
+    //     });
+    //   }
+    // });
 
     return pairedTrades;
   };
@@ -64,7 +113,16 @@ export default function TradesTable({ trades }) {
     return profitLoss.toFixed(2);
   };
 
-  const pairedTrades = pairTrades(trades);
+  const pairedTrades = pairTrades(sortedTrades);
+
+  // Function to extract time from timestamp
+  const extractTime = (timestamp) => {
+    return new Date(timestamp).toLocaleTimeString([], {
+      hour: "2-digit",
+      minute: "2-digit",
+      second: "2-digit",
+    });
+  };
 
   return (
     <div className="container mx-auto px-4">
@@ -83,28 +141,51 @@ export default function TradesTable({ trades }) {
           <tbody>
             {pairedTrades.map((pair, index) => (
               <tr
+                key={`pair-${index}`}
+                className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
+              >
+                <td className="px-4 py-2 border-t border-gray-300" colSpan={7}>
+                  <div className="font-semibold">Trade Pair {index + 1}</div>
+                  <div>
+                    Buy: {extractTime(pair.buyTrade.Timestamp)} -{" "}
+                    {pair.buyTrade["Avg Fill Price"]}
+                  </div>
+                  <div>
+                    Sell: {extractTime(pair.sellTrade.Timestamp)} -{" "}
+                    {pair.sellTrade["Avg Fill Price"]}
+                  </div>
+                  <div>
+                    Profit/Loss: $
+                    {calculateProfitLoss(pair.buyTrade, pair.sellTrade)}
+                  </div>
+                </td>
+              </tr>
+            ))}
+            {sortedTrades.map((trade, index) => (
+              <tr
                 key={index}
                 className={index % 2 === 0 ? "bg-gray-50" : "bg-white"}
               >
                 <td className="px-4 py-2 border-t border-gray-300">
-                  {pair.buyTrade.Timestamp} - {pair.sellTrade.Timestamp}
-                </td>
-                <td className="px-4 py-2 border-t border-gray-300">Buy/Sell</td>
-                <td className="px-4 py-2 border-t border-gray-300">
-                  {pair.buyTrade.Type}
+                  {extractTime(trade.Timestamp)}
                 </td>
                 <td className="px-4 py-2 border-t border-gray-300">
-                  {pair.buyTrade["Filled Qty"]}
+                  {trade["B/S"]}
                 </td>
                 <td className="px-4 py-2 border-t border-gray-300">
-                  {pair.buyTrade["Avg Fill Price"]} /{" "}
-                  {pair.sellTrade["Avg Fill Price"]}
+                  {trade["Type"]}
                 </td>
                 <td className="px-4 py-2 border-t border-gray-300">
-                  {calculateProfitLoss(pair.buyTrade, pair.sellTrade)}
+                  {trade["Filled Qty"]}
                 </td>
                 <td className="px-4 py-2 border-t border-gray-300">
-                  {pair.buyTrade.Product}
+                  {trade["Avg Fill Price"]} / {trade["Avg Fill Price"]}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {/* {calculateProfitLoss(trade, trade)} */}
+                </td>
+                <td className="px-4 py-2 border-t border-gray-300">
+                  {trade.Product}
                 </td>
               </tr>
             ))}
